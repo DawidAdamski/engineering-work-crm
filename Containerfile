@@ -33,6 +33,9 @@ RUN uv pip install --system -r requirements.txt
 # Copy application source code
 COPY source/minicrm/ .
 
+# Make startup script executable (it's already copied with source code)
+RUN chmod +x /app/start.sh
+
 # Collect static files (can be disabled with DISABLE_COLLECTSTATIC env var)
 # Run as root before switching to non-root user
 RUN if [ -z "$DISABLE_COLLECTSTATIC" ]; then \
@@ -49,9 +52,9 @@ USER appuser
 # Expose port 8080 (Kubernetes service will map to 8000)
 EXPOSE 8080
 
-# Set default command to run Gunicorn
+# Set default command to run startup script
 ENV APP_MODULE=minicrm.wsgi:application
 
-# Run Gunicorn
-CMD gunicorn --bind 0.0.0.0:8080 --workers 4 --timeout 120 --access-logfile - --error-logfile - ${APP_MODULE}
+# Use startup script that handles migrations
+CMD ["/app/start.sh"]
 
