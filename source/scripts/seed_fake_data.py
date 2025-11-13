@@ -1,7 +1,11 @@
 import os
+import sys
 import django
 import random
 from faker import Faker
+
+# Add the minicrm directory to the Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'minicrm'))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'minicrm.settings')
 django.setup()
@@ -68,3 +72,4 @@ def run():
 
 if __name__ == "__main__":
     run()
+

@@ -1,0 +1,135 @@
+---
+alwaysApply: true
+---
+
+# Engineering Work CRM - Main Project Information
+
+## Project Overview
+
+This repository contains a Django-based CRM (Customer Relationship Management) application that simulates a typical shop with clients, orders, and products. This is part of a larger engineering work project that compares traditional RFM (Recency, Frequency, Monetary) customer segmentation with AI-powered segmentation using n8n and Qdrant.
+
+## Technology Stack
+
+- **Framework**: Django 5.1.7
+- **Language**: Python 3.12
+- **Package Manager**: uv (Python package manager)
+- **API Framework**: Django REST Framework 3.16.0
+- **Database**: PostgreSQL (production), SQLite (local development)
+- **Container Base Image**: Red Hat UBI9 Python 3.12 (`ubi9/python-312`)
+  - Registry: `registry.redhat.io/ubi9/python-312`
+  - Documentation: https://catalog.redhat.com/en/software/containers/ubi9/python-312/657b08d023df896ebfacf402
+- **Deployment**: Source-to-Image (S2I) approach
+- **Container Runtime**: Podman (not Docker)
+
+## Project Purpose
+
+The application serves as a CRM system for a shop with the following key features:
+
+1. **Customer Management**: Manage customer data
+2. **Product Management**: Manage product catalog
+3. **Order Management**: Handle orders and order items
+4. **Customer Segmentation**: 
+   - Traditional RFM (Recency, Frequency, Monetary) model
+   - AI-powered segmentation using n8n and Qdrant
+5. **API Access**: RESTful API to access data and group users for comparison between RFM and AI approaches
+
+## Repository Structure
+
+```
+engineering-work-crm/
+├── docs/                    # Code documentation
+│   ├── README.md           # Main documentation
+│   └── S2I_DEPLOYMENT.md   # S2I deployment guide
+├── source/
+│   ├── minicrm/            # Django application (S2I source context)
+│   │   ├── manage.py       # Django management script
+│   │   ├── requirements.txt # Python dependencies for S2I
+│   │   ├── minicrm/        # Django project package
+│   │   │   ├── settings.py # Django settings
+│   │   │   ├── urls.py     # URL configuration
+│   │   │   └── wsgi.py     # WSGI application entry point
+│   │   ├── customer/       # Customer management app
+│   │   ├── product/        # Product management app
+│   │   └── order/          # Order management app
+│   └── scripts/            # Scripts for creating fake/test data
+├── requirements.txt        # Root-level Python dependencies (for local dev)
+└── .venv/                  # Local virtual environment (not deployed)
+```
+
+## Deployment Strategy
+
+### Local Development
+- First, test and develop the application locally
+- Use `uv` for package management
+- SQLite database for local development
+- Django development server
+
+### Production Deployment
+- Deploy using **Source-to-Image (S2I)** approach
+- Base image: `ubi9/python-312` (Red Hat UBI9 with Python 3.12)
+- S2I build context: `source/minicrm/`
+- Application runs on port **8080** (S2I default)
+- Uses Gunicorn as WSGI server (provided by S2I builder)
+- PostgreSQL database connection (see infrastructure repo for details)
+
+## Database Configuration
+
+- **Production**: PostgreSQL
+  - Configuration details: `/home/dadamski/praca_inzynierska/engineering-work-infrastracture/docs/README.postgresql.md`
+  - Database connection via environment variables
+- **Local Development**: SQLite (default Django setup)
+
+## API Endpoints
+
+The application provides RESTful APIs for:
+- `/api/customers/` - Customer management
+- `/api/products/` - Product management
+- `/api/orders/` - Order management
+- `/admin/` - Django admin panel
+
+Additional endpoints for customer grouping (RFM and AI-based) will be added.
+
+## Key Requirements
+
+1. **S2I Compatibility**: Code must be structured to work with S2I builder
+   - Source code in `source/minicrm/`
+   - `requirements.txt` in `source/minicrm/` for S2I build
+   - WSGI application in `minicrm/wsgi.py`
+   - Application runs on port 8080
+
+2. **PostgreSQL Integration**: Application must support PostgreSQL database
+   - Use environment variables for database configuration
+   - Support both local (SQLite) and production (PostgreSQL) environments
+
+3. **API for Segmentation**: Provide APIs to:
+   - Access customer, order, and product data
+   - Group users using RFM model
+   - Group users using AI (n8n, Qdrant integration)
+
+4. **Data Generation**: Scripts in `source/scripts/` for creating fake/test data
+
+5. **Documentation**: All code documentation in `docs/` directory
+
+## Development Guidelines
+
+- Use `uv` for Python package management
+- Follow Django best practices
+- Write RESTful APIs using Django REST Framework
+- Ensure code is compatible with S2I build process
+- Support both local development and containerized deployment
+- Use environment variables for configuration (database, secrets, etc.)
+- Follow the repository structure as defined above
+
+## Related Repositories
+
+- **Infrastructure Repository**: `/home/dadamski/praca_inzynierska/engineering-work-infrastracture/`
+  - Contains PostgreSQL configuration and deployment infrastructure
+  - ArgoCD deployment configurations
+  - See `README.postgresql.md` for database setup details
+
+## Notes
+
+- The application is part of a larger system comparing RFM vs AI-based customer segmentation
+- Container runtime is Podman (not Docker) - use `podman` commands instead of `docker`
+- S2I builder automatically detects WSGI application from `minicrm/wsgi.py`
+- Application must be testable locally before S2I deployment
