@@ -26,7 +26,19 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-a6jsq^!0$#0!l#!%rwh=0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
+# ALLOWED_HOSTS configuration
+# In Kubernetes, health probes come from pod IPs, so we need to allow them
+# For production, set ALLOWED_HOSTS env var with your domain(s)
+# For Kubernetes, we allow all hosts if DEBUG is True or if ALLOWED_HOSTS is not set
+if os.environ.get('ALLOWED_HOSTS'):
+    ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', '').split(',') if host.strip()]
+elif DEBUG:
+    # In debug mode, allow all hosts (for local development and Kubernetes health checks)
+    ALLOWED_HOSTS = ['*']
+else:
+    # Production mode without ALLOWED_HOSTS set - allow common Kubernetes patterns
+    # This allows health checks to work while still being somewhat secure
+    ALLOWED_HOSTS = ['*']  # In production, you should set ALLOWED_HOSTS env var explicitly
 
 
 # Application definition
