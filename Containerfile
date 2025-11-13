@@ -12,6 +12,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
         postgresql \
         postgresql-devel \
         curl \
+        bash \
         && \
     dnf clean all
 
@@ -56,5 +57,6 @@ EXPOSE 8080
 ENV APP_MODULE=minicrm.wsgi:application
 
 # Use startup script that handles migrations
-CMD ["/app/start.sh"]
+# Use shell form to ensure bash is used
+CMD ["/bin/bash", "/app/start.sh"]
 

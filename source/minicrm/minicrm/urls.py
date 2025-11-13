@@ -20,6 +20,7 @@ from rest_framework.routers import DefaultRouter
 from customer.views import CustomerViewSet
 from order.views import OrderViewSet
 from product.views import ProductViewSet
+from .health import health_check
 
 router = DefaultRouter()
 router.register(r'customers', CustomerViewSet)
@@ -29,4 +30,5 @@ router.register(r'products', ProductViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('health', health_check, name='health'),
 ]
