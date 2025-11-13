@@ -80,15 +80,26 @@ WSGI_APPLICATION = 'minicrm.wsgi.application'
 
 # Support both PostgreSQL (production) and SQLite (local development)
 # PostgreSQL configuration via environment variables
-if os.environ.get('DB_ENGINE') == 'postgresql':
+# Supports both naming conventions:
+# - Infrastructure convention: POSTGRES_HOST, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+# - Generic convention: DB_ENGINE, DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
+
+# Check if PostgreSQL is configured (either via DB_ENGINE or POSTGRES_HOST)
+use_postgresql = (
+    os.environ.get('DB_ENGINE') == 'postgresql' or 
+    os.environ.get('POSTGRES_HOST') is not None
+)
+
+if use_postgresql:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'minicrm'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+            # Support both naming conventions
+            'NAME': os.environ.get('POSTGRES_DB') or os.environ.get('DB_NAME', 'minicrm'),
+            'USER': os.environ.get('POSTGRES_USER') or os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD') or os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('POSTGRES_HOST') or os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('POSTGRES_PORT') or os.environ.get('DB_PORT', '5432'),
         }
     }
 else:
@@ -139,7 +150,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+# STATIC_ROOT is required for collectstatic during S2I build
+# S2I builder will collect static files to this directory
+STATIC_ROOT = os.environ.get('STATIC_ROOT', os.path.join(BASE_DIR, 'staticfiles'))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

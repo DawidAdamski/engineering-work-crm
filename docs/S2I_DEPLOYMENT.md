@@ -7,8 +7,10 @@ This repository contains a Django CRM application that is designed to be deploye
 ## Base Image
 
 - **Image**: `ubi9/python-312` (Red Hat Universal Base Image 9 with Python 3.12)
-- **Registry**: `registry.redhat.io/ubi9/python-312`
+- **Registry**: `registry.access.redhat.com/ubi9/python-312` or `registry.redhat.io/ubi9/python-312`
 - **Documentation**: https://catalog.redhat.com/en/software/containers/ubi9/python-312/657b08d023df896ebfacf402
+
+**Note**: The infrastructure repository may reference `python-311` in examples, but this codebase uses Python 3.12.
 
 ## Repository Structure
 
@@ -37,36 +39,60 @@ The S2I builder will:
 1. **Copy source code** from `source/minicrm/` to `/opt/app-root/src` in the container
 2. **Install dependencies** from `requirements.txt` using pip
 3. **Detect WSGI application** from `minicrm/wsgi.py` (automatically detects `application` variable)
-4. **Run the application** using Gunicorn on port 8080
+4. **Run the application** using Gunicorn on port 8080 (container port)
 
-## S2I Build Command
+## Deployment Method
 
-### Using OpenShift CLI (oc)
+**Note**: This application is deployed via **ArgoCD and Kubernetes**, not using direct S2I commands. The S2I build process happens automatically as part of the Kubernetes/ArgoCD deployment workflow.
 
-```bash
-oc new-app registry.redhat.io/ubi9/python-312~https://github.com/your-org/engineering-work-crm.git \
-  --context-dir=source/minicrm \
-  --name=crm-api
-```
-
-### Using S2I CLI
+For local testing or manual builds, you can use S2I CLI (if available):
 
 ```bash
-s2i build https://github.com/your-org/engineering-work-crm.git \
+s2i build https://github.com/DawidAdamski/engineering-work-crm.git \
   --context-dir=source/minicrm \
-  registry.redhat.io/ubi9/python-312 \
+  registry.access.redhat.com/ubi9/python-312 \
   crm-api:latest
 ```
 
+However, in production, the build and deployment are managed by:
+- **ArgoCD** for GitOps-based deployment
+- **Kubernetes BuildConfig** (if using OpenShift) or similar CI/CD pipeline
+- See the infrastructure repository for deployment manifests: `/home/dadamski/praca_inzynierska/engineering-work-infrastracture/`
+
 ## Environment Variables
 
-The S2I builder supports the following environment variables (can be set in `.s2i/environment` file or via OpenShift/ArgoCD):
+### S2I Builder Variables
+
+The S2I builder supports the following environment variables (can be set in `.s2i/environment` file or via Kubernetes/ArgoCD):
 
 - **APP_MODULE**: WSGI module path (defaults to auto-detection from `wsgi.py`)
   - Example: `minicrm.wsgi:application`
 - **DISABLE_MIGRATE**: Set to non-empty value to skip `manage.py migrate` on startup
 - **DISABLE_COLLECTSTATIC**: Set to non-empty value to skip `manage.py collectstatic` during build
 - **APP_HOME**: Sub-directory containing the application (if not root)
+
+### Django Application Variables
+
+The Django application uses the following environment variables (set via Kubernetes ConfigMap/Secrets):
+
+**Database Configuration** (supports both naming conventions):
+- `POSTGRES_HOST` or `DB_HOST` - PostgreSQL hostname (e.g., `postgres.crm-rfm.svc.cluster.local`)
+- `POSTGRES_DB` or `DB_NAME` - Database name (e.g., `crmdb`)
+- `POSTGRES_USER` or `DB_USER` - Database user
+- `POSTGRES_PASSWORD` or `DB_PASSWORD` - Database password
+- `POSTGRES_PORT` or `DB_PORT` - Database port (default: `5432`)
+- `DB_ENGINE` - Set to `postgresql` to enable PostgreSQL (alternative to `POSTGRES_HOST`)
+
+**Django Settings**:
+- `SECRET_KEY` - Django secret key (required in production)
+- `DEBUG` - Set to `False` in production
+- `ALLOWED_HOSTS` - Comma-separated list of allowed hosts
+
+**Other Services** (for future AI/Qdrant integration):
+- `QDRANT_URL` - Qdrant API endpoint
+- `QDRANT_COLLECTION` - Collection name for embeddings
+- `OPENAI_MODEL` - Embedding model name
+- `LOG_LEVEL` - Logging level (default: `INFO`)
 
 ## Django Configuration for Production
 
@@ -177,7 +203,9 @@ All Python dependencies are listed in `requirements.txt`:
 
 ## Port Configuration
 
-The S2I builder exposes port **8080** by default. The application runs on this port in the container.
+- **Container Port**: The S2I builder runs the application on port **8080** inside the container (S2I default)
+- **Kubernetes Service Port**: The Kubernetes service exposes port **8000** (as configured in deployment manifests)
+- The port mapping (8080 → 8000) is handled by the Kubernetes Service configuration
 
 ## Health Checks
 

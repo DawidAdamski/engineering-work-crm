@@ -1,0 +1,57 @@
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+docs/
+*.md
+README*
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local development files
+requirements.txt
+.cursor/
+
+# Scripts (not needed in container)
+source/scripts/
+
+# Test files
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+

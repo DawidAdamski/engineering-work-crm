@@ -6,6 +6,7 @@ django-filter==25.1
 djangorestframework==3.16.0
 executing==2.2.0
 Faker==24.0.0
+gunicorn==21.2.0
 icecream==2.1.4
 Markdown==3.7
 psycopg2-binary==2.9.9

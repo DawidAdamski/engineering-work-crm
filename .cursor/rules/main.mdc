@@ -65,18 +65,23 @@ engineering-work-crm/
 - Django development server
 
 ### Production Deployment
-- Deploy using **Source-to-Image (S2I)** approach
+- Deploy using **Source-to-Image (S2I)** approach via **ArgoCD and Kubernetes**
 - Base image: `ubi9/python-312` (Red Hat UBI9 with Python 3.12)
 - S2I build context: `source/minicrm/`
-- Application runs on port **8080** (S2I default)
+- Application runs on port **8080** inside container (S2I default)
+- Kubernetes Service exposes port **8000** (port mapping handled by Service)
 - Uses Gunicorn as WSGI server (provided by S2I builder)
-- PostgreSQL database connection (see infrastructure repo for details)
+- PostgreSQL database connection via environment variables (see infrastructure repo for details)
+- Deployment managed by ArgoCD - no direct `oc` or `s2i` commands needed
 
 ## Database Configuration
 
 - **Production**: PostgreSQL
   - Configuration details: `/home/dadamski/praca_inzynierska/engineering-work-infrastracture/docs/README.postgresql.md`
   - Database connection via environment variables
+  - Supports both naming conventions:
+    - Infrastructure convention: `POSTGRES_HOST`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+    - Generic convention: `DB_ENGINE=postgresql`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
 - **Local Development**: SQLite (default Django setup)
 
 ## API Endpoints

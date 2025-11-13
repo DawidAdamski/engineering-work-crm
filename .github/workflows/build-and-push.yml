@@ -1,0 +1,87 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: crm-api
+  REGISTRY: docker.io
+  # Docker Hub username - set DOCKER_USERNAME secret in GitHub repository settings
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Podman
+        uses: containers/podman-action@v1
+        with:
+          podman-version: latest
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build image with Podman
+        run: |
+          if [ -z "${{ env.DOCKER_USERNAME }}" ]; then
+            echo "Error: DOCKER_USERNAME secret is not set"
+            exit 1
+          fi
+          podman build \
+            --tag ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --tag ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest \
+            --file Containerfile \
+            .
+
+      - name: Push image to Docker Hub
+        if: github.event_name != 'pull_request'
+        run: |
+          podman push ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          podman push ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Build summary
+        if: always()
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Image: ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Event: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "- Status: ✅ Pushed to Docker Hub" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Status: ✅ Built (not pushed - PR)" >> $GITHUB_STEP_SUMMARY
+          fi
+

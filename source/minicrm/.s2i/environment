@@ -1,0 +1,20 @@
+# S2I Environment Variables
+# These variables are used by the S2I builder to configure the application
+
+# WSGI Application Module
+# The S2I builder will auto-detect this from wsgi.py, but we can explicitly set it
+# Format: MODULE_NAME:VARIABLE_NAME
+APP_MODULE=minicrm.wsgi:application
+
+# Database Migrations
+# Set to non-empty value to disable automatic migrations on container startup
+# DISABLE_MIGRATE=
+
+# Static Files Collection
+# Set to non-empty value to disable collectstatic during build
+# DISABLE_COLLECTSTATIC=
+
+# Application Home Directory
+# If your application is in a subdirectory, specify it here
+# APP_HOME=
+
