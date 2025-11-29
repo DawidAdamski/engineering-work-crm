@@ -29,14 +29,22 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 # ALLOWED_HOSTS configuration
 # In Kubernetes, health probes come from pod IPs, so we need to allow them
 # For production, set ALLOWED_HOSTS env var with your domain(s)
-# For Kubernetes, we allow all hosts if DEBUG is True or if ALLOWED_HOSTS is not set
+# For Kubernetes, we allow all hosts to ensure health checks work
+# Check if we're running in Kubernetes (common indicators)
+is_kubernetes = (
+    os.environ.get('KUBERNETES_SERVICE_HOST') is not None or
+    os.environ.get('POSTGRES_HOST', '').endswith('.svc.cluster.local')
+)
+
 if os.environ.get('ALLOWED_HOSTS'):
+    # Use explicit ALLOWED_HOSTS if set
     ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', '').split(',') if host.strip()]
-elif DEBUG:
-    # In debug mode, allow all hosts (for local development and Kubernetes health checks)
+elif is_kubernetes or DEBUG:
+    # In Kubernetes or debug mode, allow all hosts (including pod IPs for health checks)
+    # Django 5.1.7 supports '*' to allow all hosts
     ALLOWED_HOSTS = ['*']
 else:
-    # Production mode without ALLOWED_HOSTS set - allow common Kubernetes patterns
+    # Production mode without ALLOWED_HOSTS set - allow all hosts for Kubernetes compatibility
     # This allows health checks to work while still being somewhat secure
     ALLOWED_HOSTS = ['*']  # In production, you should set ALLOWED_HOSTS env var explicitly
 
@@ -58,6 +66,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'minicrm.middleware.KubernetesHealthCheckMiddleware',  # Must be before CommonMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
