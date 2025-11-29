@@ -30,5 +30,6 @@ router.register(r'products', ProductViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('health', health_check, name='health'),
+    path('health/', health_check, name='health'),
+    path('health', health_check, name='health-no-slash'),  # Support both with and without trailing slash
 ]
