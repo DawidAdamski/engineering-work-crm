@@ -13,8 +13,13 @@ RUN dnf install -y --setopt=install_weak_deps=False \
         postgresql-devel \
         curl \
         bash \
+        which \
         && \
     dnf clean all
+
+# Create python symlink for compatibility (python3.12 -> python)
+RUN ln -sf /usr/bin/python3.12 /usr/bin/python && \
+    ln -sf /usr/bin/python3.12 /usr/bin/python3
 
 # Install uv (fast Python package manager)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -23,7 +28,8 @@ ENV PATH="/root/.local/bin:${PATH}"
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app
+    PYTHONPATH=/app \
+    PATH="/usr/bin:${PATH}"
 
 # Copy requirements first for better layer caching
 COPY source/minicrm/requirements.txt .
@@ -40,7 +46,7 @@ RUN chmod +x /app/start.sh
 # Collect static files (can be disabled with DISABLE_COLLECTSTATIC env var)
 # Run as root before switching to non-root user
 RUN if [ -z "$DISABLE_COLLECTSTATIC" ]; then \
-        python manage.py collectstatic --noinput || true; \
+        /usr/bin/python manage.py collectstatic --noinput || true; \
     fi
 
 # Create non-root user and set ownership
