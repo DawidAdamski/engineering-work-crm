@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'customer.apps.CustomerConfig',
     'product.apps.ProductConfig',
     'order.apps.OrderConfig',
+    'rfm.apps.RfmConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

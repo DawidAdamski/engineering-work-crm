@@ -20,12 +20,14 @@ from rest_framework.routers import DefaultRouter
 from customer.views import CustomerViewSet
 from order.views import OrderViewSet
 from product.views import ProductViewSet
+from rfm.views import RFMScoreViewSet
 from .health import health_check
 
 router = DefaultRouter()
 router.register(r'customers', CustomerViewSet)
 router.register(r'orders', OrderViewSet)
 router.register(r'products', ProductViewSet)
+router.register(r'rfm', RFMScoreViewSet, basename='rfm')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
