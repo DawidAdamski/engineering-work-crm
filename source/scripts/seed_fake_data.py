@@ -15,6 +15,7 @@ import sys
 import django
 import random
 from datetime import datetime, timedelta
+from django.utils import timezone
 from faker import Faker
 
 # Add the minicrm directory to the Python path
@@ -328,8 +329,8 @@ def run(total_customers=None, date_range_days=None):
     print(f"  Date range: {CONFIG['date_range_days']} days (~{CONFIG['date_range_days']/365:.1f} years)")
     print("=" * 60)
     
-    # Calculate end date (today)
-    end_date = datetime.now()
+    # Calculate end date (today) - use timezone-aware datetime
+    end_date = timezone.now()
     start_date = end_date - timedelta(days=CONFIG['date_range_days'])
     
     print(f"Date range: {start_date.date()} to {end_date.date()}")
