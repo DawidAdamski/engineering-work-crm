@@ -16,6 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+import os
 from rest_framework.routers import DefaultRouter
 from customer.views import CustomerViewSet
 from order.views import OrderViewSet
@@ -35,3 +38,8 @@ urlpatterns = [
     path('health/', health_check, name='health'),
     path('health', health_check, name='health-no-slash'),  # Support both with and without trailing slash
 ]
+
+# Serve static files in development/production (for DRF browsable API CSS)
+# In production, consider using nginx or a CDN for better performance
+if settings.DEBUG or os.environ.get('SERVE_STATIC', 'False').lower() == 'true':
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
