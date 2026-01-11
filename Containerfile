@@ -40,6 +40,9 @@ RUN uv pip install --system -r requirements.txt
 # Copy application source code
 COPY source/minicrm/ .
 
+# Copy scripts directory (for data generation)
+COPY source/scripts/ /app/scripts/
+
 # Make startup script executable (it's already copied with source code)
 RUN chmod +x /app/start.sh
 

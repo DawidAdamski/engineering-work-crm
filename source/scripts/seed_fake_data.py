@@ -18,7 +18,15 @@ from datetime import datetime, timedelta
 from faker import Faker
 
 # Add the minicrm directory to the Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'minicrm'))
+# In container: /app/scripts -> /app/ (where Django app is)
+# Locally: source/scripts -> source/minicrm
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if os.path.exists(os.path.join(script_dir, '..', 'minicrm')):
+    # Local development: source/scripts -> source/minicrm
+    sys.path.insert(0, os.path.join(script_dir, '..', 'minicrm'))
+else:
+    # Container: /app/scripts -> /app/
+    sys.path.insert(0, os.path.join(script_dir, '..'))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'minicrm.settings')
 django.setup()

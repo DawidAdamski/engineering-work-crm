@@ -46,8 +46,8 @@ Thumbs.db
 requirements.txt
 .cursor/
 
-# Scripts (not needed in container)
-source/scripts/
+# Scripts are now included in container (for data generation)
+# source/scripts/
 
 # Test files
 *.pyc
